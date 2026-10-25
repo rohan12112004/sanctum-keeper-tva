@@ -152,7 +152,8 @@ class RuleEngine {
       ext: parsed.ext.replace('.', '').toLowerCase(), // extension without dot (e.g., "pdf")
       size: stat.size,                // size in bytes
       mtimeMs: stat.mtimeMs,          // last modified time in ms since epoch
-      birthtimeMs: stat.birthtimeMs   // creation time in ms since epoch
+      birthtimeMs: stat.birthtimeMs,  // creation time in ms since epoch
+      folder: parsed.dir              // directory path
     };
   }
 
@@ -173,6 +174,17 @@ class RuleEngine {
    */
   evaluateCondition(fileStats, cond) {
     switch (cond.field) {
+      case 'folder':
+      case 'doorway': {
+        const val = String(cond.value).toLowerCase();
+        const fdir = (fileStats.folder || path.dirname(fileStats.filePath)).toLowerCase();
+        if (cond.operator === 'contains')    return fdir.includes(val);
+        if (cond.operator === 'starts_with') return fdir.startsWith(val);
+        if (cond.operator === 'ends_with')   return fdir.endsWith(val);
+        if (cond.operator === 'equals')      return path.resolve(fdir) === path.resolve(cond.value).toLowerCase();
+        break;
+      }
+
       case 'name': {
         const val = String(cond.value).toLowerCase();
         const fname = fileStats.name.toLowerCase();
@@ -315,8 +327,8 @@ class RuleEngine {
         const dest = this.getSafeDestination(desiredDest, src);
         this.checkDormammuLoop(src, dest);
 
-        // Inform sentinel to ignore the newly moved destination path
-        if (this.sentinel) this.sentinel.ignoreNext(dest);
+        // Note: We intentionally do NOT suppress dest watcher on cross-folder move,
+        // allowing destination doorway rules to act or trigger Dormammu loop detection.
 
         await fs.promises.rename(src, dest);
         return this.ledger.record({

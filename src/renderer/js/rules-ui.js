@@ -302,7 +302,15 @@ function updateConditionRow(row, defaultOperator = null) {
   let opHtml = '';
   let placeholder = 'e.g. invoice';
 
-  if (field === 'extension') {
+  if (field === 'folder') {
+    opHtml = `
+      <option value="contains">contains</option>
+      <option value="equals">equals</option>
+      <option value="starts_with">starts with</option>
+      <option value="ends_with">ends with</option>
+    `;
+    placeholder = 'e.g. PortalA or Downloads';
+  } else if (field === 'extension') {
     opHtml = '<option value="equals">equals</option>';
     placeholder = 'e.g. pdf, png';
   } else if (field === 'size') {
@@ -347,6 +355,7 @@ function addConditionRow(cond = {}) {
     <select class="form-select cond-field">
       <option value="name"      ${cond.field === 'name'      ? 'selected' : ''}>File Name</option>
       <option value="extension" ${cond.field === 'extension' ? 'selected' : ''}>Extension</option>
+      <option value="folder"    ${cond.field === 'folder'    ? 'selected' : ''}>Source Folder / Doorway</option>
       <option value="size"      ${cond.field === 'size'      ? 'selected' : ''}>File Size</option>
       <option value="age_days"  ${cond.field === 'age_days'  ? 'selected' : ''}>File Age</option>
     </select>
