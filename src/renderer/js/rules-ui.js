@@ -181,18 +181,17 @@ function initRuleModal() {
 
   // Browse button for destination folder
   document.getElementById('btnPickDest')?.addEventListener('click', async () => {
-    const result = await window.tvaAPI.selectFolder();
-    if (result && result.success) {
-      // The selectFolder IPC also calls addDoorway — for destination picking
-      // we just need the path from the dialog. We'll use a workaround:
-      // since selectFolder adds doorway, we remove it after getting the path.
-      // Better: use a direct dialog open. For simplicity, read from the doorways diff.
-      // Actually, let's just let the user type the path or read what was selected.
-    }
-    // Simple approach: prompt for path
-    const path = prompt('Enter the destination folder path:');
-    if (path) {
-      document.getElementById('actionDestination').value = path;
+    try {
+      const selectedPath = await window.tvaAPI.selectDestFolder();
+      if (selectedPath) {
+        document.getElementById('actionDestination').value = selectedPath;
+      }
+    } catch (err) {
+      console.warn('Native picker failed or unavailable, fallback to prompt:', err);
+      const path = prompt('Enter the destination folder path:');
+      if (path) {
+        document.getElementById('actionDestination').value = path;
+      }
     }
   });
 

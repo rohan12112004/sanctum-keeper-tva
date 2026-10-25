@@ -71,6 +71,9 @@ contextBridge.exposeInMainWorld('tvaAPI', {
   /** Rewinds the ENTIRE latest batch sweep — mass undo */
   rewindLatestSweep: () => ipcRenderer.invoke('ledger:rewindLatest'),
 
+  /** Utility: Opens native OS folder picker to choose a destination directory */
+  selectDestFolder: () => ipcRenderer.invoke('dialog:selectDestFolder'),
+
   // ──────────────────────────────────────────────────────────────────
   // PUSH EVENTS — Main Process → Renderer (real-time notifications)
   // ──────────────────────────────────────────────────────────────────

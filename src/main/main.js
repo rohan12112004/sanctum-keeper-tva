@@ -156,6 +156,16 @@ function registerIpcHandlers() {
     }
   });
 
+  /** Opens native folder picker to select a destination folder (for rule action) */
+  ipcMain.handle('dialog:selectDestFolder', async () => {
+    const result = await dialog.showOpenDialog(mainWindow, {
+      title: 'SELECT DESTINATION SANCTUM SHELF',
+      properties: ['openDirectory', 'createDirectory']
+    });
+    if (result.canceled || !result.filePaths.length) return null;
+    return result.filePaths[0];
+  });
+
   // ── B2 + B3: Rules CRUD ────────────────────────────────────────────
 
   /** Returns all saved rules */
