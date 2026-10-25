@@ -168,7 +168,8 @@ function registerPushEvents() {
   // Dormammu loop detected
   window.tvaAPI.onLoopDetected((data) => {
     console.warn('[App] Dormammu loop caught:', data);
-    showToast(`⚠ DORMAMMU LOOP HALTED: ${data.message || 'File trapped in recursion.'}`, 'error', 5000);
+    showToast(`⚠ DORMAMMU LOOP HALTED: ${data.message || 'File trapped in recursion.'}`, 'error', 8000);
+    showDormammuAlert(data.message || 'File trapped in temporal recursion.');
   });
 
   // Ledger updated (sweep or rewind)

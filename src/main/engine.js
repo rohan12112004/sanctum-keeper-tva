@@ -77,6 +77,7 @@ class RuleEngine {
      * Only flags genuine ping-pong loops or runaway cycles.
      */
     this.recentMoves = new Map();
+    this.recentChains = new Map();
   }
 
   /** Connect the sentinel so we can suppress watcher echo when moving/renaming */
@@ -92,6 +93,7 @@ class RuleEngine {
       this.recentMoves.delete(fileBase.toLowerCase());
     } else {
       this.recentMoves.clear();
+      this.recentChains.clear();
     }
   }
 
@@ -101,35 +103,48 @@ class RuleEngine {
    * Detects if a file is trapped in a recursive ping-pong loop between watched folders.
    */
   checkDormammuLoop(sourcePath, destPath = null) {
-    if (!sourcePath || !destPath) return;
+    if (!sourcePath) return;
 
-    const srcDir = path.dirname(path.resolve(sourcePath)).toLowerCase();
-    const destDir = path.dirname(path.resolve(destPath)).toLowerCase();
-
-    // If source and destination are the same directory, not a loop
-    if (srcDir === destDir) return;
-
-    const fileBase = path.basename(sourcePath).toLowerCase();
     const now = Date.now();
-    const WINDOW_MS = 6000;
+    const WINDOW_MS = 8000;
+    const normalizedSrc = path.resolve(sourcePath).toLowerCase();
+    const normalizedDest = destPath ? path.resolve(destPath).toLowerCase() : null;
 
-    const history = (this.recentMoves.get(fileBase) || [])
-      .filter(record => now - record.time < WINDOW_MS);
+    // 1. Direct Operation Chain (detects rapid successive actions/renames on the same relic)
+    const prev = this.recentChains.get(normalizedSrc);
+    let chainCount = 1;
+    if (prev && (now - prev.timestamp < WINDOW_MS)) {
+      chainCount = prev.count + 1;
+    }
 
-    history.push({ time: now, srcDir, destDir });
-    this.recentMoves.set(fileBase, history);
+    if (normalizedDest) {
+      this.recentChains.set(normalizedDest, { count: chainCount, timestamp: now });
+    }
 
-    // Count rapid bounces specifically between these two folders
-    const bounceCount = history.filter(r =>
-      (r.srcDir === srcDir && r.destDir === destDir) ||
-      (r.srcDir === destDir && r.destDir === srcDir)
-    ).length;
+    // 2. Directory ping-pong tracking (for files bouncing between directories)
+    let pingPongCount = 0;
+    if (normalizedDest) {
+      const srcDir = path.dirname(normalizedSrc);
+      const destDir = path.dirname(normalizedDest);
+      const fileBase = path.basename(normalizedSrc);
 
-    // A true runaway loop requires 3+ rapid bounces in 6s
-    if (bounceCount >= 3 || history.length >= 6) {
-      console.warn(`[Engine] ⚠ Dormammu cycle prevented for: "${fileBase}"`);
+      const history = (this.recentMoves.get(fileBase) || [])
+        .filter(record => now - record.time < WINDOW_MS);
+      history.push({ time: now, srcDir, destDir });
+      this.recentMoves.set(fileBase, history);
+
+      pingPongCount = history.filter(r =>
+        (r.srcDir === srcDir && r.destDir === destDir) ||
+        (r.srcDir === destDir && r.destDir === srcDir)
+      ).length;
+    }
+
+    // A runaway loop is detected if a file undergoes 3+ rapid chained actions or bounces
+    if (chainCount >= 3 || pingPongCount >= 3) {
+      const fileName = path.basename(sourcePath);
+      console.warn(`[Engine] ⚠ Dormammu cycle halted for: "${fileName}" (chain: ${chainCount}, bounce: ${pingPongCount})`);
       throw new Error(
-        `DORMAMMU LOOP DETECTED: File "${fileBase}" is cycling between folders! Stopped automatically to protect timeline.`
+        `DORMAMMU LOOP DETECTED: File "${fileName}" trapped in temporal recursion (${Math.max(chainCount, pingPongCount)} cycles)! Stopped automatically to protect timeline.`
       );
     }
   }
@@ -375,8 +390,7 @@ class RuleEngine {
         const dest = this.getSafeDestination(desiredDest, src);
         this.checkDormammuLoop(src, dest);
 
-        if (this.sentinel) this.sentinel.ignoreNext(dest);
-
+        // Intentionally do NOT suppress sentinel on rename so circular rules trigger Dormammu detector
         await fs.promises.rename(src, dest);
         return this.ledger.record({
           actionType: 'RENAME',
