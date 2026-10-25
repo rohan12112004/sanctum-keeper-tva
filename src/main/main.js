@@ -88,22 +88,31 @@ function createWindow() {
     minHeight: 650,
     title: 'SANCTUM KEEPER — TVA TEMPORAL MONITOR',
     backgroundColor: '#121413',  // TVA Dark Bronze background
+    show: false,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,    // Security: isolate renderer from main context
       nodeIntegration: false,    // Security: no direct Node.js access in renderer
       sandbox: false             // Required for contextBridge to work with preload
     },
-    // Custom title bar styling
-    titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : 'default',
-    icon: path.join(__dirname, '../../assets/tva_icon.png')
+    titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : 'default'
   });
 
   // Load the TVA Holo-Terminal HTML interface
   mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
 
-  // Open DevTools in development mode (comment out for production)
-  // mainWindow.webContents.openDevTools();
+  mainWindow.once('ready-to-show', () => {
+    mainWindow.show();
+    mainWindow.focus();
+    mainWindow.setAlwaysOnTop(true);
+    setTimeout(() => {
+      if (mainWindow) mainWindow.setAlwaysOnTop(false);
+    }, 600);
+  });
+
+  mainWindow.webContents.on('did-fail-load', (_event, code, desc) => {
+    console.error('[Main] Failed to load index.html:', code, desc);
+  });
 
   mainWindow.on('closed', () => {
     mainWindow = null;
