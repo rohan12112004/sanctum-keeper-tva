@@ -1,0 +1,552 @@
+/*
+ * ╔══════════════════════════════════════════════════════════════════╗
+ * ║          SANCTUM KEEPER — TVA EDITION                           ║
+ * ║          tva-theme.css — Core TVA / Loki Visual Theme          ║
+ * ╠══════════════════════════════════════════════════════════════════╣
+ * ║  DESIGN LANGUAGE:                                               ║
+ * ║  • 1970s Time Variance Authority Mainframe Terminal             ║
+ * ║  • CRT Phosphor Amber Monitor (from Loki Disney+ series)        ║
+ * ║  • Glowing green Temporal Loom energy accents                  ║
+ * ║  • Retro typewriter / monospace typography                      ║
+ * ║  • Scanline overlay for authentic CRT appearance                ║
+ * ║                                                                  ║
+ * ║  COLOR PALETTE:                                                  ║
+ * ║  --tva-bg:        #121413  (Deep terminal canvas background)    ║
+ * ║  --amber:         #E58B24  (CRT Amber Glow — primary accent)    ║
+ * ║  --emerald:       #00FF9D  (Loki Emerald — success, watchers)   ║
+ * ║  --prune-red:     #E63946  (TVA Prune — errors, deletion)       ║
+ * ║  --gold:          #C7A75C  (Phosphor Gold — labels, borders)    ║
+ * ║  --card-bg:       #1C201E  (Terminal Charcoal — card surfaces)  ║
+ * ╚══════════════════════════════════════════════════════════════════╝
+ */
+
+/* ── CSS Custom Properties (Design Tokens) ─────────────────────────── */
+:root {
+  --tva-bg:         #121413;
+  --card-bg:        #1C201E;
+  --card-bg-2:      #232823;
+  --amber:          #E58B24;
+  --amber-dim:      #B86E12;
+  --amber-glow:     rgba(229, 139, 36, 0.25);
+  --amber-glow-lg:  rgba(229, 139, 36, 0.45);
+  --emerald:        #00FF9D;
+  --emerald-dim:    #00CC7A;
+  --emerald-glow:   rgba(0, 255, 157, 0.2);
+  --prune-red:      #E63946;
+  --prune-glow:     rgba(230, 57, 70, 0.25);
+  --gold:           #C7A75C;
+  --gold-dim:       #9E8245;
+  --text-primary:   #E8D5A8;
+  --text-secondary: #9A8E74;
+  --text-muted:     #5A5040;
+  --border:         rgba(199, 167, 92, 0.25);
+  --border-bright:  rgba(229, 139, 36, 0.5);
+  --font-mono:      'Courier New', 'Lucida Console', Courier, monospace;
+  --font-display:   'Courier New', serif;
+  --transition:     0.2s ease;
+  --radius:         4px;
+}
+
+/* ── Base Reset & Typography ─────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  background-color: var(--tva-bg);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.6;
+  /* Subtle noise texture via CSS gradient */
+  background-image:
+    repeating-linear-gradient(
+      0deg,
+      rgba(0,0,0,0.03) 0px,
+      rgba(0,0,0,0.03) 1px,
+      transparent 1px,
+      transparent 2px
+    );
+}
+
+/* ── CRT SCANLINE OVERLAY ────────────────────────────────────────────── */
+/*
+ * Creates the phosphor monitor scanline effect.
+ * pointer-events:none ensures it doesn't block mouse interactions.
+ * The animation slowly scrolls the scanlines for a flickering effect.
+ */
+.crt-overlay {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  pointer-events: none;
+  z-index: 9999;
+  background:
+    repeating-linear-gradient(
+      0deg,
+      rgba(0, 0, 0, 0.06) 0px,
+      rgba(0, 0, 0, 0.06) 1px,
+      transparent 1px,
+      transparent 3px
+    );
+  animation: scanlineScroll 12s linear infinite;
+}
+
+@keyframes scanlineScroll {
+  from { background-position: 0 0; }
+  to   { background-position: 0 60px; }
+}
+
+/* Occasional screen flicker for CRT authenticity */
+@keyframes crtFlicker {
+  0%, 100% { opacity: 1; }
+  97%       { opacity: 1; }
+  98%       { opacity: 0.85; }
+  99%       { opacity: 1; }
+}
+
+body {
+  animation: crtFlicker 8s ease-in-out infinite;
+}
+
+/* ── GLOWING TEXT HELPERS ────────────────────────────────────────────── */
+.amber-glow {
+  color: var(--amber);
+  text-shadow: 0 0 8px var(--amber-glow-lg), 0 0 20px var(--amber-glow);
+}
+
+.emerald-glow {
+  color: var(--emerald);
+  text-shadow: 0 0 8px var(--emerald-glow), 0 0 18px rgba(0,255,157,0.15);
+}
+
+.amber-text { color: var(--amber); }
+.emerald-text { color: var(--emerald); }
+.red-text { color: var(--prune-red); }
+.gold-text { color: var(--gold); }
+.muted-text { color: var(--text-secondary); }
+
+/* ── TVA HEADER ──────────────────────────────────────────────────────── */
+.tva-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 28px 12px;
+  background: linear-gradient(180deg, #0D0F0E 0%, #121413 100%);
+  border-bottom: 1px solid var(--border-bright);
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Subtle amber top glow on header */
+.tva-header::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--amber), transparent);
+  box-shadow: 0 0 15px var(--amber-glow-lg);
+}
+
+.tva-header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+/* Miss Minutes Clock */
+.miss-minutes-clock {
+  position: relative;
+  width: 52px;
+  height: 52px;
+  flex-shrink: 0;
+}
+
+.clock-face {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: 2.5px solid var(--amber);
+  background: radial-gradient(circle, #1a1500 0%, #0d0f0e 100%);
+  position: relative;
+  box-shadow: 0 0 12px var(--amber-glow), inset 0 0 10px rgba(229,139,36,0.1);
+  animation: clockPulse 3s ease-in-out infinite;
+}
+
+@keyframes clockPulse {
+  0%, 100% { box-shadow: 0 0 12px var(--amber-glow), inset 0 0 10px rgba(229,139,36,0.1); }
+  50%       { box-shadow: 0 0 22px var(--amber-glow-lg), inset 0 0 16px rgba(229,139,36,0.18); }
+}
+
+.clock-hand {
+  position: absolute;
+  bottom: 50%;
+  left: 50%;
+  transform-origin: bottom center;
+  background: var(--amber);
+  border-radius: 2px;
+}
+
+.hour-hand {
+  width: 2.5px;
+  height: 14px;
+  margin-left: -1.25px;
+  animation: hourRotate 43200s linear infinite;
+}
+
+.minute-hand {
+  width: 1.5px;
+  height: 18px;
+  margin-left: -0.75px;
+  animation: minuteRotate 3600s linear infinite;
+}
+
+@keyframes hourRotate   { from { transform: rotate(0deg); }   to { transform: rotate(360deg); } }
+@keyframes minuteRotate { from { transform: rotate(0deg); }   to { transform: rotate(360deg); } }
+
+.clock-center {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--amber);
+  box-shadow: 0 0 6px var(--amber);
+}
+
+.clock-smile {
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 10px;
+  color: var(--amber);
+  font-weight: bold;
+  letter-spacing: 2px;
+}
+
+/* Title Block */
+.tva-title-block {
+  display: flex;
+  flex-direction: column;
+}
+
+.tva-division {
+  font-size: 9px;
+  letter-spacing: 3px;
+  color: var(--gold);
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+
+.tva-main-title {
+  font-size: 26px;
+  font-weight: 900;
+  letter-spacing: 6px;
+  color: var(--amber);
+  text-shadow: 0 0 15px var(--amber-glow-lg), 0 0 30px var(--amber-glow);
+  line-height: 1.1;
+  text-transform: uppercase;
+}
+
+.tva-subtitle {
+  font-size: 8.5px;
+  letter-spacing: 2.5px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+}
+
+/* Sentinel Status Pill */
+.tva-header-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+.sentinel-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border: 1px solid var(--emerald-dim);
+  border-radius: 20px;
+  background: rgba(0, 255, 157, 0.05);
+  box-shadow: 0 0 10px var(--emerald-glow);
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--emerald);
+  box-shadow: 0 0 8px var(--emerald), 0 0 16px rgba(0,255,157,0.5);
+  animation: dotPulse 2s ease-in-out infinite;
+}
+
+.status-dot.inactive {
+  background: var(--text-muted);
+  box-shadow: none;
+  animation: none;
+}
+
+@keyframes dotPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.6; transform: scale(0.8); }
+}
+
+.status-text {
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  color: var(--emerald);
+  text-shadow: 0 0 6px var(--emerald-glow);
+}
+
+.agent-id {
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+/* ── DIVIDER ─────────────────────────────────────────────────────────── */
+.tva-divider {
+  text-align: center;
+  color: var(--amber-dim);
+  font-size: 9px;
+  letter-spacing: 1px;
+  padding: 3px 0;
+  background: linear-gradient(180deg, #0D0F0E, var(--tva-bg));
+  opacity: 0.5;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+/* ── TAB NAVIGATION ──────────────────────────────────────────────────── */
+.tva-tabs {
+  display: flex;
+  background: #0D0F0E;
+  border-bottom: 1px solid var(--border);
+  padding: 0 16px;
+  flex-shrink: 0;
+  gap: 4px;
+}
+
+.tva-tab {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 20px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-bottom: none;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all var(--transition);
+  position: relative;
+  bottom: -1px;
+  border-radius: 4px 4px 0 0;
+}
+
+.tva-tab:hover {
+  color: var(--amber);
+  border-color: var(--border);
+  background: var(--amber-glow);
+}
+
+.tva-tab.active {
+  color: var(--amber);
+  border-color: var(--border-bright);
+  border-bottom-color: var(--card-bg);
+  background: var(--card-bg);
+  text-shadow: 0 0 8px var(--amber-glow);
+  box-shadow: 0 -2px 10px rgba(229,139,36,0.15);
+}
+
+.tva-tab.active .tab-icon {
+  filter: drop-shadow(0 0 4px var(--amber));
+}
+
+.tab-label {
+  font-weight: 700;
+}
+
+/* ── MAIN CONTENT AREA ───────────────────────────────────────────────── */
+.tva-content {
+  flex: 1;
+  overflow-y: auto;
+  background: var(--card-bg);
+  padding: 24px 28px;
+}
+
+/* Custom scrollbar with TVA styling */
+.tva-content::-webkit-scrollbar {
+  width: 6px;
+}
+.tva-content::-webkit-scrollbar-track {
+  background: var(--tva-bg);
+}
+.tva-content::-webkit-scrollbar-thumb {
+  background: var(--amber-dim);
+  border-radius: 3px;
+}
+.tva-content::-webkit-scrollbar-thumb:hover {
+  background: var(--amber);
+}
+
+/* Tab panels */
+.tab-panel {
+  display: block;
+}
+.tab-panel[hidden] {
+  display: none;
+}
+
+/* ── PANEL HEADERS ───────────────────────────────────────────────────── */
+.panel-header {
+  margin-bottom: 22px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.panel-title {
+  font-size: 18px;
+  font-weight: 900;
+  letter-spacing: 3px;
+  color: var(--amber);
+  text-shadow: 0 0 12px var(--amber-glow);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.panel-desc {
+  color: var(--text-secondary);
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+/* ── FULL-HEIGHT LAYOUT ──────────────────────────────────────────────── */
+body {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── TOAST NOTIFICATIONS ─────────────────────────────────────────────── */
+.toast-container {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.toast {
+  padding: 10px 18px;
+  border-radius: var(--radius);
+  font-size: 12px;
+  letter-spacing: 0.5px;
+  border: 1px solid;
+  animation: toastSlideIn 0.3s ease;
+  max-width: 380px;
+}
+
+.toast.success {
+  background: rgba(0, 255, 157, 0.08);
+  border-color: var(--emerald-dim);
+  color: var(--emerald);
+  box-shadow: 0 0 12px var(--emerald-glow);
+}
+
+.toast.error {
+  background: rgba(230, 57, 70, 0.08);
+  border-color: var(--prune-red);
+  color: var(--prune-red);
+  box-shadow: 0 0 12px var(--prune-glow);
+}
+
+.toast.info {
+  background: var(--amber-glow);
+  border-color: var(--amber-dim);
+  color: var(--amber);
+}
+
+@keyframes toastSlideIn {
+  from { transform: translateX(120%); opacity: 0; }
+  to   { transform: translateX(0);   opacity: 1; }
+}
+
+/* ── DORMAMMU LOOP ALERT ─────────────────────────────────────────────── */
+.dormammu-alert {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 24px;
+  background: rgba(230, 57, 70, 0.9);
+  border-bottom: 2px solid var(--prune-red);
+  z-index: 9998;
+  animation: alertFlash 0.5s ease;
+}
+
+@keyframes alertFlash {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.7; }
+}
+
+.dormammu-icon { font-size: 18px; }
+
+.dormammu-message {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: #fff;
+  text-shadow: 0 0 8px rgba(255,255,255,0.5);
+}
+
+/* ── EMPTY STATE ─────────────────────────────────────────────────────── */
+.empty-state {
+  text-align: center;
+  padding: 50px 20px;
+  color: var(--text-muted);
+}
+
+.empty-icon {
+  font-size: 40px;
+  margin-bottom: 16px;
+  opacity: 0.6;
+}
+
+.empty-text {
+  font-size: 13px;
+  line-height: 1.8;
+  color: var(--text-secondary);
+}
+
+/* ── UTILITY ─────────────────────────────────────────────────────────── */
+code {
+  background: rgba(229,139,36,0.12);
+  color: var(--amber);
+  padding: 1px 5px;
+  border-radius: 2px;
+  font-size: 11px;
+}
+
+strong {
+  color: var(--text-primary);
+}

@@ -1,0 +1,763 @@
+/*
+ * ╔══════════════════════════════════════════════════════════════════╗
+ * ║          SANCTUM KEEPER — TVA EDITION                           ║
+ * ║          components.css — UI Components & Layout Styles         ║
+ * ╠══════════════════════════════════════════════════════════════════╣
+ * ║  COVERS:                                                         ║
+ * ║  • Buttons (primary, secondary, ghost, danger variants)         ║
+ * ║  • Form controls (inputs, selects, labels)                      ║
+ * ║  • Doorway cards (watched folder tiles)                         ║
+ * ║  • Rule cards (enchantment list)                                 ║
+ * ║  • Simulation results table                                     ║
+ * ║  • Ledger entries table                                          ║
+ * ║  • TVA action badges (PRUNED, BRANCHED, TRANSMUTED, REWOUND)    ║
+ * ║  • Modal dialog                                                  ║
+ * ╚══════════════════════════════════════════════════════════════════╝
+ */
+
+/* ── BUTTONS ─────────────────────────────────────────────────────────── */
+
+/* Base button reset */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 18px;
+  border: 1px solid;
+  border-radius: var(--radius);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  position: relative;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+/* Amber LED indicator dot on primary buttons (1970s mainframe feel) */
+.btn-primary::before {
+  content: '●';
+  font-size: 7px;
+  margin-right: 2px;
+  opacity: 0.7;
+  animation: ledBlink 1.8s ease-in-out infinite;
+}
+
+@keyframes ledBlink {
+  0%, 100% { opacity: 0.7; }
+  50%       { opacity: 0.2; }
+}
+
+/* Primary — Amber CRT Button */
+.btn-primary {
+  background: linear-gradient(180deg, #2A1800, #1A0F00);
+  border-color: var(--amber);
+  color: var(--amber);
+  box-shadow: 0 0 8px var(--amber-glow), inset 0 1px 0 rgba(229,139,36,0.2);
+  text-shadow: 0 0 6px var(--amber-glow);
+}
+.btn-primary:hover {
+  background: linear-gradient(180deg, #3A2200, #251400);
+  box-shadow: 0 0 18px var(--amber-glow-lg), inset 0 1px 0 rgba(229,139,36,0.3);
+  transform: translateY(-1px);
+}
+.btn-primary:active {
+  transform: translateY(1px);
+  box-shadow: 0 0 4px var(--amber-glow), inset 0 2px 4px rgba(0,0,0,0.4);
+}
+
+/* Secondary — Muted border button */
+.btn-secondary {
+  background: var(--card-bg-2);
+  border-color: var(--border-bright);
+  color: var(--gold);
+  box-shadow: none;
+}
+.btn-secondary:hover {
+  border-color: var(--amber);
+  color: var(--amber);
+  background: var(--amber-glow);
+}
+
+/* Ghost — transparent */
+.btn-ghost {
+  background: transparent;
+  border-color: var(--border);
+  color: var(--text-secondary);
+}
+.btn-ghost:hover {
+  border-color: var(--gold-dim);
+  color: var(--text-primary);
+}
+
+/* Danger / Prune Red */
+.btn-danger {
+  background: rgba(230, 57, 70, 0.08);
+  border-color: var(--prune-red);
+  color: var(--prune-red);
+}
+.btn-danger:hover {
+  background: rgba(230, 57, 70, 0.18);
+  box-shadow: 0 0 10px var(--prune-glow);
+}
+
+/* Emerald Sweep Button */
+.btn-sweep {
+  background: linear-gradient(180deg, #001F12, #001008);
+  border-color: var(--emerald-dim);
+  color: var(--emerald);
+  font-size: 12px;
+  padding: 10px 24px;
+  box-shadow: 0 0 12px var(--emerald-glow);
+  text-shadow: 0 0 8px rgba(0,255,157,0.5);
+  letter-spacing: 2px;
+}
+.btn-sweep:hover {
+  box-shadow: 0 0 24px rgba(0,255,157,0.3);
+  transform: translateY(-1px);
+}
+.btn-sweep::before {
+  content: '▶ ';
+  animation: none;
+}
+
+/* Rewind button — amber with undo icon */
+.btn-rewind {
+  background: rgba(229, 139, 36, 0.06);
+  border-color: var(--amber-dim);
+  color: var(--amber);
+  padding: 5px 12px;
+  font-size: 10px;
+}
+.btn-rewind:hover {
+  background: var(--amber-glow);
+  box-shadow: 0 0 8px var(--amber-glow);
+}
+
+/* Rewind all button */
+.btn-rewind-all {
+  background: rgba(229, 139, 36, 0.08);
+  border-color: var(--amber);
+  color: var(--amber);
+  box-shadow: 0 0 6px var(--amber-glow);
+}
+.btn-rewind-all:hover {
+  box-shadow: 0 0 16px var(--amber-glow-lg);
+}
+
+/* Refresh button */
+.btn-refresh {
+  background: transparent;
+  border-color: var(--border-bright);
+  color: var(--gold);
+}
+.btn-refresh:hover {
+  color: var(--amber);
+  border-color: var(--amber);
+}
+
+/* Small button modifier */
+.btn-sm {
+  padding: 5px 10px;
+  font-size: 10px;
+  letter-spacing: 1px;
+}
+
+/* Danger/Remove — icon-only small */
+.btn-icon {
+  padding: 5px 8px;
+  min-width: 28px;
+}
+
+/* ── FORM CONTROLS ────────────────────────────────────────────────────── */
+
+.form-group {
+  margin-bottom: 14px;
+}
+
+.form-label {
+  display: block;
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--gold);
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.form-input,
+.form-select {
+  width: 100%;
+  padding: 8px 12px;
+  background: var(--tva-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  transition: border-color var(--transition), box-shadow var(--transition);
+  appearance: none;
+}
+
+.form-input:focus,
+.form-select:focus {
+  outline: none;
+  border-color: var(--amber-dim);
+  box-shadow: 0 0 8px var(--amber-glow);
+}
+
+.form-input::placeholder {
+  color: var(--text-muted);
+}
+
+.form-select {
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23C7A75C'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 30px;
+}
+
+.form-hint {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 5px;
+  line-height: 1.6;
+}
+
+.form-section-title {
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: var(--amber);
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+}
+
+.input-row {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.input-row .form-input,
+.input-row .form-select {
+  flex: 1;
+}
+
+/* ── DOORWAYS TAB ─────────────────────────────────────────────────────── */
+
+.doorway-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.doorway-counter {
+  font-size: 11px;
+  color: var(--text-secondary);
+  letter-spacing: 1px;
+}
+
+.doorways-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 28px;
+}
+
+/* Individual doorway card */
+.doorway-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  background: var(--card-bg-2);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--emerald-dim);
+  border-radius: var(--radius);
+  transition: all var(--transition);
+  animation: doorwayAppear 0.3s ease;
+}
+
+@keyframes doorwayAppear {
+  from { opacity: 0; transform: translateX(-12px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.doorway-card:hover {
+  border-left-color: var(--emerald);
+  box-shadow: 0 0 12px var(--emerald-glow);
+}
+
+.doorway-card-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+}
+
+.doorway-sentinel-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--emerald);
+  box-shadow: 0 0 8px var(--emerald), 0 0 14px rgba(0,255,157,0.4);
+  flex-shrink: 0;
+  animation: dotPulse 2s ease-in-out infinite;
+}
+
+.doorway-path {
+  font-size: 12px;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.doorway-label {
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: var(--emerald-dim);
+  text-transform: uppercase;
+}
+
+/* Sweep Zone */
+.sweep-zone {
+  background: linear-gradient(135deg, rgba(0,255,157,0.03), rgba(0,0,0,0));
+  border: 1px solid var(--border);
+  border-top: 1px solid rgba(0,255,157,0.2);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+}
+
+.sweep-zone-title {
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: var(--emerald-dim);
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+.sweep-buttons {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.sweep-result {
+  margin-top: 12px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  min-height: 20px;
+}
+
+/* ── RULES TAB ────────────────────────────────────────────────────────── */
+
+.rules-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.rule-info {
+  font-size: 10px;
+  letter-spacing: 1px;
+}
+
+/* Rule card */
+.rule-card {
+  background: var(--card-bg-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 10px;
+  overflow: hidden;
+  transition: all var(--transition);
+  animation: ruleAppear 0.3s ease;
+  position: relative;
+}
+
+@keyframes ruleAppear {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.rule-card:hover {
+  border-color: var(--amber-dim);
+}
+
+/* Priority number label on left edge */
+.rule-card::before {
+  content: attr(data-priority);
+  position: absolute;
+  top: 0; bottom: 0; left: 0;
+  width: 30px;
+  background: rgba(229,139,36,0.08);
+  border-right: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: var(--amber-dim);
+  font-weight: 900;
+}
+
+.rule-card-body {
+  padding: 12px 14px 12px 42px;
+}
+
+.rule-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.rule-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--amber);
+  letter-spacing: 0.5px;
+}
+
+.rule-actions {
+  display: flex;
+  gap: 6px;
+}
+
+/* Conditions summary */
+.rule-conditions-summary {
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+  line-height: 1.7;
+}
+
+.condition-chip {
+  display: inline-block;
+  padding: 1px 7px;
+  background: rgba(199,167,92,0.1);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  font-size: 10px;
+  color: var(--gold);
+  margin: 2px;
+}
+
+/* Action badge on rule card */
+.rule-action-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 3px;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.badge-move   { background: rgba(0,255,157,0.1); color: var(--emerald); border: 1px solid var(--emerald-dim); }
+.badge-copy   { background: rgba(199,167,92,0.1); color: var(--gold);   border: 1px solid var(--gold-dim); }
+.badge-rename { background: rgba(229,139,36,0.1); color: var(--amber);  border: 1px solid var(--amber-dim); }
+.badge-trash  { background: rgba(230,57,70,0.1);  color: var(--prune-red); border: 1px solid var(--prune-red); }
+
+/* ── CONDITIONS BUILDER (in modal) ──────────────────────────────────── */
+
+.condition-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 8px;
+  padding: 8px;
+  background: var(--tva-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  animation: condAppear 0.2s ease;
+}
+
+@keyframes condAppear {
+  from { opacity: 0; transform: translateX(-6px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.condition-row select,
+.condition-row input {
+  flex: 1;
+  min-width: 0;
+}
+
+/* ── SIMULATION TAB ───────────────────────────────────────────────────── */
+
+.simulation-controls {
+  margin-bottom: 20px;
+  max-width: 600px;
+}
+
+/* Simulation results table */
+.sim-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  animation: tableAppear 0.3s ease;
+}
+
+@keyframes tableAppear {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.sim-table th {
+  text-align: left;
+  padding: 10px 14px;
+  font-size: 9px;
+  letter-spacing: 2.5px;
+  color: var(--gold);
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--border-bright);
+  background: rgba(229,139,36,0.05);
+}
+
+.sim-table td {
+  padding: 9px 14px;
+  border-bottom: 1px solid rgba(199,167,92,0.1);
+  color: var(--text-primary);
+  font-size: 12px;
+  vertical-align: middle;
+}
+
+.sim-table tr:hover td {
+  background: rgba(229,139,36,0.04);
+}
+
+/* Action type badges in table */
+.action-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 2px;
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.ab-move     { background: rgba(0,255,157,0.12); color: var(--emerald); }
+.ab-copy     { background: rgba(199,167,92,0.12); color: var(--gold); }
+.ab-rename   { background: rgba(229,139,36,0.12); color: var(--amber); }
+.ab-trash    { background: rgba(230,57,70,0.12);  color: var(--prune-red); }
+.ab-untouched{ background: rgba(90,80,64,0.2);    color: var(--text-muted); }
+.ab-ignored  { background: rgba(90,80,64,0.12);   color: var(--text-muted); opacity: 0.6; }
+
+/* ── LEDGER TAB ───────────────────────────────────────────────────────── */
+
+.ledger-toolbar {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+}
+
+/* Ledger entries table */
+.ledger-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+}
+
+.ledger-table th {
+  text-align: left;
+  padding: 10px 14px;
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: var(--gold);
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--border-bright);
+  background: rgba(229,139,36,0.05);
+  position: sticky;
+  top: 0;
+}
+
+.ledger-table td {
+  padding: 8px 14px;
+  border-bottom: 1px solid rgba(199,167,92,0.08);
+  color: var(--text-primary);
+  vertical-align: middle;
+  font-size: 11px;
+}
+
+.ledger-table tr:hover td {
+  background: rgba(229,139,36,0.03);
+}
+
+/* Rewound row styling (dimmed) */
+.ledger-table tr.rewound td {
+  opacity: 0.45;
+  text-decoration: line-through;
+  text-decoration-color: var(--text-muted);
+}
+
+/* TVA Status Stamp badges */
+.stamp {
+  display: inline-block;
+  padding: 2px 8px;
+  font-size: 9px;
+  letter-spacing: 2px;
+  font-weight: 900;
+  text-transform: uppercase;
+  border-radius: 2px;
+  border: 1px solid;
+}
+
+.stamp-committed { color: var(--emerald); border-color: var(--emerald-dim); background: rgba(0,255,157,0.06); }
+.stamp-rewound   { color: var(--text-muted); border-color: var(--text-muted); background: transparent; }
+
+/* Action type stamps in ledger */
+.stamp-move   { color: var(--emerald); border-color: rgba(0,255,157,0.3); }
+.stamp-copy   { color: var(--gold);    border-color: rgba(199,167,92,0.3); }
+.stamp-rename { color: var(--amber);   border-color: rgba(229,139,36,0.3); }
+.stamp-trash  { color: var(--prune-red); border-color: rgba(230,57,70,0.3); }
+
+/* ── MODAL DIALOG ─────────────────────────────────────────────────────── */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  z-index: 5000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: overlayFade 0.2s ease;
+  backdrop-filter: blur(3px);
+}
+
+.modal-overlay[hidden] {
+  display: none;
+}
+
+@keyframes overlayFade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.modal-box {
+  background: #161A17;
+  border: 1px solid var(--amber-dim);
+  border-radius: 6px;
+  width: 90%;
+  max-width: 620px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 0 40px rgba(229,139,36,0.15), 0 20px 60px rgba(0,0,0,0.6);
+  animation: modalSlideUp 0.25s ease;
+}
+
+@keyframes modalSlideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to   { transform: translateY(0); opacity: 1; }
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-bright);
+  background: linear-gradient(180deg, rgba(229,139,36,0.06), transparent);
+  flex-shrink: 0;
+}
+
+.modal-title {
+  font-size: 14px;
+  font-weight: 900;
+  letter-spacing: 3px;
+  color: var(--amber);
+  text-shadow: 0 0 8px var(--amber-glow);
+  text-transform: uppercase;
+}
+
+.modal-close {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 16px;
+  padding: 4px;
+  line-height: 1;
+  transition: color var(--transition);
+}
+
+.modal-close:hover {
+  color: var(--prune-red);
+}
+
+.modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+}
+
+.modal-body::-webkit-scrollbar { width: 4px; }
+.modal-body::-webkit-scrollbar-thumb { background: var(--amber-dim); border-radius: 2px; }
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 14px 20px;
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+/* ── TIMELINE ANIMATION (file processing) ──────────────────────────── */
+/* Pulsing green line that appears when a file is being evaluated */
+@keyframes timelinePulse {
+  0%   { width: 0; opacity: 1; }
+  70%  { width: 100%; opacity: 1; }
+  100% { width: 100%; opacity: 0; }
+}
+
+.timeline-pulse-bar {
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--emerald), transparent);
+  border-radius: 1px;
+  animation: timelinePulse 1.5s ease forwards;
+  box-shadow: 0 0 8px var(--emerald-glow);
+}
+
+/* ── GENERAL UTILITIES ────────────────────────────────────────────────── */
+
+.mt-4  { margin-top: 4px; }
+.mt-8  { margin-top: 8px; }
+.mt-16 { margin-top: 16px; }
+.mb-8  { margin-bottom: 8px; }
+.flex  { display: flex; }
+.gap-8 { gap: 8px; }
+.items-center { align-items: center; }
+.flex-1 { flex: 1; }
+
+/* File path display — monospace truncated text */
+.file-path {
+  font-size: 11px;
+  color: var(--text-secondary);
+  max-width: 280px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.timestamp {
+  font-size: 10px;
+  color: var(--text-muted);
+  letter-spacing: 0.5px;
+}

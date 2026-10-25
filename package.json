@@ -1,0 +1,20 @@
+{
+  "name": "sanctum-keeper-tva",
+  "version": "1.0.0",
+  "description": "Deterministic File Management Terminal — TVA Sanctum Keeper (Loki Edition). A hackathon project that watches folders and applies user-written rules to organize files. No AI. No guessing. Pure deterministic rule execution.",
+  "main": "src/main/main.js",
+  "scripts": {
+    "start": "electron .",
+    "pack": "electron-builder --dir"
+  },
+  "keywords": ["electron", "file-organizer", "loki", "tva", "hackathon"],
+  "author": "Sanctum Keeper Dev Team",
+  "license": "MIT",
+  "dependencies": {
+    "chokidar": "^3.5.3",
+    "trash": "^8.1.1"
+  },
+  "devDependencies": {
+    "electron": "^28.2.0"
+  }
+}
