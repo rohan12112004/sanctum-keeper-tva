@@ -383,6 +383,15 @@ body {
   font-weight: 700;
 }
 
+.tab-sub {
+  font-size: 8.5px;
+  font-weight: 400;
+  color: var(--gold-dim);
+  text-transform: uppercase;
+  margin-left: 3px;
+  opacity: 0.85;
+}
+
 /* ── MAIN CONTENT AREA ───────────────────────────────────────────────── */
 .tva-content {
   flex: 1;

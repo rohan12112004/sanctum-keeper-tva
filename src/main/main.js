@@ -328,6 +328,7 @@ app.whenReady().then(() => {
 
   // Start watching all previously saved doorways
   sentinel.initWatchers();
+  engine.setSentinel(sentinel);
 
   // Register all IPC communication handlers
   registerIpcHandlers();

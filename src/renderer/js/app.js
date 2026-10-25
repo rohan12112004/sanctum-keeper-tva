@@ -45,6 +45,19 @@ function activateTab(tabName) {
     panel.hidden = false;
     panel.classList.add('active');
   }
+
+  // Refresh tab content dynamically on view
+  if (tabName === 'simulation') {
+    window.tvaAPI.getDoorways().then(doorways => {
+      if (typeof syncSimFolderDropdown === 'function') syncSimFolderDropdown(doorways);
+    });
+  } else if (tabName === 'ledger') {
+    if (typeof loadLedger === 'function') loadLedger();
+  } else if (tabName === 'doorways') {
+    if (typeof renderDoorways === 'function') renderDoorways();
+  } else if (tabName === 'rules') {
+    if (typeof renderRulesList === 'function') renderRulesList();
+  }
 }
 
 // ── Toast Notifications ───────────────────────────────────────────────
@@ -154,9 +167,8 @@ function registerPushEvents() {
 
   // Dormammu loop detected
   window.tvaAPI.onLoopDetected((data) => {
-    console.error('[App] Dormammu loop detected:', data);
-    showDormammuAlert(data.message || 'File trapped in temporal recursion.');
-    showToast('DORMAMMU LOOP DETECTED — file is now LOCKED_IN_TIME', 'error', 8000);
+    console.warn('[App] Dormammu loop caught:', data);
+    showToast(`⚠ DORMAMMU LOOP HALTED: ${data.message || 'File trapped in recursion.'}`, 'error', 5000);
   });
 
   // Ledger updated (sweep or rewind)

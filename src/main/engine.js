@@ -48,51 +48,75 @@ async function getTrash() {
   return trashFn;
 }
 
+// Helper to parse human-friendly file size strings like "10MB", "500kb", "1.5GB", or raw bytes
+function parseSizeToBytes(val) {
+  if (typeof val === 'number') return val;
+  if (!val) return 0;
+  const str = String(val).trim().toUpperCase();
+  const match = str.match(/^([\d.]+)\s*(B|BYTES?|KB|KILOBYTES?|MB|MEGABYTES?|GB|GIGABYTES?)?$/);
+  if (!match) return Number(str) || 0;
+  const num = parseFloat(match[1]);
+  const unit = (match[2] || 'B').charAt(0);
+  if (unit === 'K') return num * 1024;
+  if (unit === 'M') return num * 1024 * 1024;
+  if (unit === 'G') return num * 1024 * 1024 * 1024;
+  return num;
+}
+
 class RuleEngine {
   /**
    * @param {SacredLedger} ledger - Instance of the SacredLedger class
    */
   constructor(ledger) {
     this.ledger = ledger;
+    this.sentinel = null;
 
     /**
      * Dormammu Loop Detector: tracks recent file movements.
-     * Map of fileName → [timestamps of moves within last 10 seconds]
-     * If a file is moved >2 times in 10 seconds → loop detected → HALT.
+     * Maps fileBase → array of { time, srcDir, destDir }
+     * Only flags genuine ping-pong loops or runaway cycles.
      */
     this.recentMoves = new Map();
+  }
+
+  /** Connect the sentinel so we can suppress watcher echo when moving/renaming */
+  setSentinel(sentinel) {
+    this.sentinel = sentinel;
   }
 
   // ── A2: Dormammu Loop Detector ─────────────────────────────────────
 
   /**
-   * Detects if a file is caught in a recursive rule loop.
-   *
-   * PROBLEM: Rule A moves file from Folder1 → Folder2.
-   *          Rule B watches Folder2 and moves file back to Folder1.
-   *          This creates an infinite loop.
-   *
-   * SOLUTION: Track how many times a file has been moved in the last 10s.
-   *           If count > 2, throw a loop error and halt processing.
-   *
-   * @param {string} fileName - Basename of the file being moved
-   * @throws {Error} if a loop is detected
+   * Detects if a file is trapped in a recursive ping-pong loop between watched folders.
    */
-  checkDormammuLoop(fileName) {
+  checkDormammuLoop(sourcePath, destPath = null) {
+    if (!sourcePath) return;
     const now = Date.now();
-    const TEN_SECONDS = 10000;
+    const WINDOW_MS = 8000;
 
-    // Keep only timestamps within the last 10 seconds
-    const history = (this.recentMoves.get(fileName) || [])
-      .filter(t => now - t < TEN_SECONDS);
+    const fileBase = path.basename(sourcePath).toLowerCase();
+    const srcDir = path.dirname(path.resolve(sourcePath)).toLowerCase();
+    const destDir = destPath ? path.dirname(path.resolve(destPath)).toLowerCase() : null;
 
-    history.push(now);
-    this.recentMoves.set(fileName, history);
+    // Moving within the exact same folder with identical name is not a loop
+    if (destDir && srcDir === destDir && path.basename(destPath).toLowerCase() === fileBase) {
+      return;
+    }
 
-    if (history.length > 2) {
+    const history = (this.recentMoves.get(fileBase) || [])
+      .filter(record => now - record.time < WINDOW_MS);
+
+    // True loop check: did this file bounce back and forth between two directories?
+    const isPingPong = destDir && history.some(r => r.srcDir === destDir && r.destDir === srcDir);
+
+    history.push({ time: now, srcDir, destDir });
+    this.recentMoves.set(fileBase, history);
+
+    // Only halt if genuine ping-pong loop or > 5 transitions in 8 seconds
+    if (isPingPong || history.length > 5) {
+      console.warn(`[Engine] ⚠ Dormammu cycle prevented for: "${fileBase}"`);
       throw new Error(
-        `DORMAMMU LOOP DETECTED: "${fileName}" is trapped in temporal recursion! ` +
-        `Moved ${history.length} times in 10 seconds. Halting — file is now LOCKED_IN_TIME.`
+        `DORMAMMU LOOP DETECTED: File "${fileBase}" is cycling between folders! Stopped automatically to protect timeline.`
       );
     }
   }
@@ -151,13 +175,13 @@ class RuleEngine {
       }
 
       case 'extension': {
-        // Compare without dots, case-insensitive
-        const ruleExt = String(cond.value).replace('.', '').toLowerCase();
+        // Compare extension case-insensitively, stripping leading dots or asterisks
+        const ruleExt = String(cond.value).trim().replace(/^[*.]+/g, '').toLowerCase();
         return fileStats.ext === ruleExt;
       }
 
       case 'size': {
-        const targetBytes = Number(cond.value);
+        const targetBytes = parseSizeToBytes(cond.value);
         if (isNaN(targetBytes)) return false;
         if (cond.operator === 'greater_than') return fileStats.size > targetBytes;
         if (cond.operator === 'less_than')    return fileStats.size < targetBytes;
@@ -233,7 +257,10 @@ class RuleEngine {
    * @param {string} targetPath - Desired destination path
    * @returns {string} Safe path that doesn't conflict with existing files
    */
-  getSafeDestination(targetPath) {
+  getSafeDestination(targetPath, sourcePath = null) {
+    if (sourcePath && path.resolve(targetPath) === path.resolve(sourcePath)) {
+      return targetPath;
+    }
     if (!fs.existsSync(targetPath)) return targetPath;
 
     const parsed = path.parse(targetPath);
@@ -243,6 +270,9 @@ class RuleEngine {
     do {
       newPath = path.join(parsed.dir, `${parsed.name} (${counter})${parsed.ext}`);
       counter++;
+      if (sourcePath && path.resolve(newPath) === path.resolve(sourcePath)) {
+        return sourcePath;
+      }
     } while (fs.existsSync(newPath));
 
     return newPath;
@@ -252,28 +282,8 @@ class RuleEngine {
 
   /**
    * Executes the action specified in a matched rule.
-   *
-   * Actions:
-   *  move    → fs.rename from source to destination folder
-   *  copy    → fs.copyFile to destination folder
-   *  rename  → rename in-place using pattern substitution
-   *  trash   → send to OS recycle bin using the 'trash' package
-   *
-   * RENAME PATTERNS:
-   *  {originalName} → replaced with filename (without ext)
-   *  {timestamp}    → replaced with Unix timestamp (ms)
-   *  {date}         → replaced with YYYY-MM-DD
-   *
-   * @param {Object} action    - rule.action object
-   * @param {Object} fileStats - from getFileStats()
-   * @param {string} ruleName  - for ledger recording
-   * @param {string} batchId   - for grouping ledger entries by sweep
-   * @returns {Object} the ledger entry created
    */
   async executeAction(action, fileStats, ruleName, batchId = null) {
-    // Check for Dormammu loop before executing
-    this.checkDormammuLoop(fileStats.base);
-
     const src = fileStats.filePath;
 
     switch (action.type) {
@@ -281,9 +291,20 @@ class RuleEngine {
         if (!fs.existsSync(action.destination)) {
           fs.mkdirSync(action.destination, { recursive: true });
         }
-        const dest = this.getSafeDestination(
-          path.join(action.destination, fileStats.base)
-        );
+        const desiredDest = path.join(action.destination, fileStats.base);
+
+        // If source is already in the destination folder, don't move or duplicate
+        if (path.resolve(path.dirname(src)) === path.resolve(action.destination)) {
+          console.log(`[Engine] File "${fileStats.base}" already in destination.`);
+          return null;
+        }
+
+        const dest = this.getSafeDestination(desiredDest, src);
+        this.checkDormammuLoop(src, dest);
+
+        // Inform sentinel to ignore the newly moved destination path
+        if (this.sentinel) this.sentinel.ignoreNext(dest);
+
         await fs.promises.rename(src, dest);
         return this.ledger.record({
           actionType: 'MOVE',
@@ -298,9 +319,12 @@ class RuleEngine {
         if (!fs.existsSync(action.destination)) {
           fs.mkdirSync(action.destination, { recursive: true });
         }
-        const dest = this.getSafeDestination(
-          path.join(action.destination, fileStats.base)
-        );
+        const desiredDest = path.join(action.destination, fileStats.base);
+        const dest = this.getSafeDestination(desiredDest, src);
+        this.checkDormammuLoop(src, dest);
+
+        if (this.sentinel) this.sentinel.ignoreNext(dest);
+
         await fs.promises.copyFile(src, dest);
         return this.ledger.record({
           actionType: 'COPY',
@@ -318,9 +342,16 @@ class RuleEngine {
           .replace('{timestamp}', Date.now())
           .replace('{date}', new Date().toISOString().split('T')[0]);
 
-        const dest = this.getSafeDestination(
-          path.join(path.dirname(src), `${newName}.${fileStats.ext}`)
-        );
+        const desiredDest = path.join(path.dirname(src), `${newName}.${fileStats.ext}`);
+        if (path.resolve(desiredDest) === path.resolve(src)) {
+          return null; // Already named properly
+        }
+
+        const dest = this.getSafeDestination(desiredDest, src);
+        this.checkDormammuLoop(src, dest);
+
+        if (this.sentinel) this.sentinel.ignoreNext(dest);
+
         await fs.promises.rename(src, dest);
         return this.ledger.record({
           actionType: 'RENAME',
@@ -332,6 +363,7 @@ class RuleEngine {
       }
 
       case 'trash': {
+        this.checkDormammuLoop(src, null);
         const trash = await getTrash();
         await trash([src]);
         return this.ledger.record({
@@ -465,11 +497,11 @@ class RuleEngine {
           match.matchedRule.name,
           batchId
         );
-        results.push(ledgerEntry);
+        if (ledgerEntry) results.push(ledgerEntry);
       } catch (err) {
         if (err.message.includes('DORMAMMU LOOP')) {
-          // Propagate loop detection upwards so main.js can emit an event
-          throw err;
+          console.warn(`[Engine] Skipping file due to loop: ${path.basename(filePath)}`);
+          continue; // Don't crash remaining files in sweep!
         }
         console.error(`[Engine] Action failed for "${path.basename(filePath)}":`, err.message);
       }

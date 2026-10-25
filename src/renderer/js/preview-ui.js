@@ -97,15 +97,15 @@ function renderSimulationTable(predictions, container, folderPath) {
       font-size: 11px;
     ">
       <div>
-        <span class="muted-text">DOORWAY</span><br/>
+        <span class="muted-text">FOLDER</span><br/>
         <span class="amber-text" style="font-size:10px;">${escapeHtml(folderPath)}</span>
       </div>
       <div style="border-left:1px solid var(--border);padding-left:24px;">
-        <span class="muted-text">TOTAL RELICS</span><br/>
+        <span class="muted-text">TOTAL FILES</span><br/>
         <span style="color:var(--text-primary);font-weight:700;">${total}</span>
       </div>
       <div>
-        <span class="muted-text">WILL ACT ON</span><br/>
+        <span class="muted-text">WILL ORGANIZE</span><br/>
         <span class="emerald-text">${matched}</span>
       </div>
       <div>
@@ -113,7 +113,7 @@ function renderSimulationTable(predictions, container, folderPath) {
         <span class="gold-text">${untouched}</span>
       </div>
       <div>
-        <span class="muted-text">IGNORED (.tmp etc)</span><br/>
+        <span class="muted-text">IGNORED (TEMP)</span><br/>
         <span class="red-text">${ignored}</span>
       </div>
     </div>
@@ -123,10 +123,10 @@ function renderSimulationTable(predictions, container, folderPath) {
       <thead>
         <tr>
           <th>#</th>
-          <th>RELIC (FILE)</th>
-          <th>MATCHED ENCHANTMENT</th>
+          <th>FILE NAME</th>
+          <th>MATCHED RULE</th>
           <th>ACTION</th>
-          <th>PREDICTED FATE</th>
+          <th>PREDICTED DESTINATION</th>
         </tr>
       </thead>
       <tbody>

@@ -74,18 +74,18 @@ async function initDoorwaysUI() {
 
     card.innerHTML = `
       <div class="doorway-card-left">
-        <div class="doorway-sentinel-dot" title="Active sentinel"></div>
+        <div class="doorway-sentinel-dot" title="Active folder sentinel"></div>
         <div>
-          <div class="doorway-label">DOORWAY #${number} — ACTIVE SENTINEL</div>
+          <div class="doorway-label">WATCHED FOLDER #${number} — TVA SENTINEL ACTIVE</div>
           <div class="doorway-path" title="${folderPath}">${folderPath}</div>
         </div>
       </div>
       <div class="flex gap-8 items-center">
         <button class="btn btn-secondary btn-sm btn-sweep-single" data-path="${folderPath}">
-          ▶ SWEEP
+          ▶ Run Rules
         </button>
         <button class="btn btn-danger btn-sm btn-remove-doorway" data-path="${folderPath}">
-          ✕ CLOSE
+          ✕ Remove
         </button>
       </div>
     `;

@@ -36,8 +36,37 @@ class DoorwaySentinel {
     // Map of folderPath → chokidar watcher instance
     this.watchers = new Map();
 
+    // Map of normalized filePath → expiration timestamp
+    // Prevents watcher from reacting to files created by the Keeper itself
+    this.ignoredPaths = new Map();
+
     // Load previously saved doorways from disk
     this.doorways = this.loadDoorways();
+  }
+
+  /**
+   * Temporarily ignores a file path so the watcher doesn't re-trigger
+   * when our own rule engine moves, copies, or renames a file.
+   */
+  ignoreNext(filePath, ttlMs = 5000) {
+    if (!filePath) return;
+    const normalized = path.resolve(filePath).toLowerCase();
+    this.ignoredPaths.set(normalized, Date.now() + ttlMs);
+  }
+
+  /**
+   * Checks if a path is currently suppressed from triggering rules.
+   */
+  isIgnored(filePath) {
+    if (!filePath) return false;
+    const normalized = path.resolve(filePath).toLowerCase();
+    const expire = this.ignoredPaths.get(normalized);
+    if (!expire) return false;
+    if (Date.now() > expire) {
+      this.ignoredPaths.delete(normalized);
+      return false;
+    }
+    return true;
   }
 
   // ── Persistence: Load & Save ──────────────────────────────────────
@@ -176,8 +205,16 @@ class DoorwaySentinel {
     });
 
     watcher.on('add', (filePath) => {
-      // Extra 800ms buffer to allow the OS to release file handles
-      setTimeout(() => this.onNewFile(filePath), 800);
+      // If Keeper itself just created or renamed this file, ignore it to prevent loop
+      if (this.isIgnored(filePath)) {
+        return;
+      }
+      // Brief buffer to allow the OS to release file handles
+      setTimeout(() => {
+        if (!this.isIgnored(filePath)) {
+          this.onNewFile(filePath);
+        }
+      }, 500);
     });
 
     watcher.on('error', (err) => {

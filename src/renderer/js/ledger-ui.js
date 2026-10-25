@@ -30,11 +30,7 @@ async function initLedgerUI() {
 
   // Rewind latest sweep (batch undo)
   document.getElementById('btnRewindLatestSweep')?.addEventListener('click', async () => {
-    if (!confirm(
-      'TIME STONE ACTIVATION: This will rewind ALL actions from the most recent sweep.\n' +
-      'Files will be returned to their original locations.\n\nProceed?'
-    )) return;
-
+    showToast('⏳ Time Stone activated: Reversing latest sweep...', 'info');
     const result = await window.tvaAPI.rewindLatestSweep();
 
     if (result.success) {
@@ -79,13 +75,13 @@ function renderLedgerTable(entries) {
     <table class="ledger-table">
       <thead>
         <tr>
-          <th>TIMESTAMP</th>
+          <th>TIME</th>
           <th>ACTION</th>
-          <th>RELIC (SOURCE FILE)</th>
-          <th>FATE (DESTINATION)</th>
-          <th>RULE / ENCHANTMENT</th>
+          <th>ORIGINAL FILE</th>
+          <th>NEW LOCATION</th>
+          <th>MATCHED RULE</th>
           <th>STATUS</th>
-          <th>REWIND</th>
+          <th>UNDO</th>
         </tr>
       </thead>
       <tbody>
@@ -120,8 +116,8 @@ function renderLedgerTable(entries) {
     // Rewind button (disabled if already rewound or if TRASH — can't auto-recover from OS trash)
     const canRewind = !isRewound && entry.actionType !== 'TRASH';
     const rewindBtn = canRewind
-      ? `<button class="btn btn-rewind btn-sm" data-entry-id="${entry.id}">↩ REWIND</button>`
-      : `<span class="muted-text" style="font-size:10px;">${isRewound ? 'DONE' : 'N/A'}</span>`;
+      ? `<button class="btn btn-rewind btn-sm" data-entry-id="${entry.id}">↩ UNDO</button>`
+      : `<span class="muted-text" style="font-size:10px;">${isRewound ? 'UNDONE' : 'N/A'}</span>`;
 
     html += `
       <tr class="${rowClass}">
@@ -160,10 +156,6 @@ function renderLedgerTable(entries) {
  * @param {string} entryId - UUID of the entry to rewind
  */
 async function rewindSingleEntry(entryId) {
-  if (!confirm('Rewind this action? The file will be returned to its original location.')) {
-    return;
-  }
-
   const result = await window.tvaAPI.rewindTransaction(entryId);
 
   if (result.success) {
@@ -183,10 +175,10 @@ async function rewindSingleEntry(entryId) {
  */
 function getActionStamp(actionType) {
   switch (actionType) {
-    case 'MOVE':   return '<span class="stamp stamp-move">BRANCHED</span>';
-    case 'COPY':   return '<span class="stamp stamp-copy">REPLICATED</span>';
-    case 'RENAME': return '<span class="stamp stamp-rename">TRANSMUTED</span>';
-    case 'TRASH':  return '<span class="stamp stamp-trash">PRUNED</span>';
+    case 'MOVE':   return '<span class="stamp stamp-move">MOVED (BRANCHED)</span>';
+    case 'COPY':   return '<span class="stamp stamp-copy">COPIED (REPLICATED)</span>';
+    case 'RENAME': return '<span class="stamp stamp-rename">RENAMED (TRANSMUTED)</span>';
+    case 'TRASH':  return '<span class="stamp stamp-trash">TRASHED (PRUNED)</span>';
     default:       return `<span class="stamp">${escapeHtml(actionType)}</span>`;
   }
 }

@@ -82,7 +82,12 @@ function createRuleCard(rule, index) {
 
   // Build action badge
   const actionBadgeClass = `badge-${rule.action?.type || 'move'}`;
-  const actionLabels = { move: '⇒ BRANCH', copy: '⊕ REPLICATE', rename: '✎ TRANSMUTE', trash: '🗑 PRUNE' };
+  const actionLabels = {
+    move: '⇒ MOVE (BRANCH)',
+    copy: '⊕ COPY (REPLICATE)',
+    rename: '✎ RENAME (TRANSMUTE)',
+    trash: '🗑 TRASH (PRUNE)'
+  };
   const actionLabel = actionLabels[rule.action?.type] || rule.action?.type?.toUpperCase();
   const actionDest = rule.action?.destination
     ? `<span class="muted-text"> → ${rule.action.destination}</span>`
@@ -142,14 +147,13 @@ function createRuleCard(rule, index) {
     openEditRuleModal(index);
   });
 
-  // Delete rule with a simple confirm
+  // Delete rule
   card.querySelector('.btn-delete-rule').addEventListener('click', async () => {
-    if (confirm(`Delete enchantment "${rule.name}"? This cannot be undone.`)) {
-      rules.splice(index, 1);
-      await persistRules();
-      renderRulesList();
-      showToast(`Enchantment "${rule.name}" deleted.`, 'info');
-    }
+    const deletedName = rule.name || 'Rule';
+    rules.splice(index, 1);
+    await persistRules();
+    renderRulesList();
+    showToast(`Rule "${deletedName}" removed.`, 'info');
   });
 
   return card;
@@ -288,6 +292,47 @@ function updateActionFields() {
 // ── Conditions Builder ────────────────────────────────────────────────
 
 /**
+ * Updates the operator dropdown and placeholder based on the selected field.
+ */
+function updateConditionRow(row, defaultOperator = null) {
+  const field = row.querySelector('.cond-field').value;
+  const opSelect = row.querySelector('.cond-operator');
+  const valInput = row.querySelector('.cond-value');
+
+  let opHtml = '';
+  let placeholder = 'e.g. invoice';
+
+  if (field === 'extension') {
+    opHtml = '<option value="equals">equals</option>';
+    placeholder = 'e.g. pdf, png';
+  } else if (field === 'size') {
+    opHtml = `
+      <option value="greater_than">greater than</option>
+      <option value="less_than">less than</option>
+    `;
+    placeholder = 'e.g. 1MB, 500KB, 10MB';
+  } else if (field === 'age_days') {
+    opHtml = '<option value="greater_than">older than (days)</option>';
+    placeholder = 'e.g. 7 (days)';
+  } else {
+    opHtml = `
+      <option value="contains">contains</option>
+      <option value="starts_with">starts with</option>
+      <option value="ends_with">ends with</option>
+      <option value="equals">equals</option>
+      <option value="regex">matches regex</option>
+    `;
+    placeholder = 'e.g. invoice';
+  }
+
+  opSelect.innerHTML = opHtml;
+  if (defaultOperator && Array.from(opSelect.options).some(o => o.value === defaultOperator)) {
+    opSelect.value = defaultOperator;
+  }
+  valInput.placeholder = placeholder;
+}
+
+/**
  * Adds a condition row to the modal's condition list.
  * @param {Object} [cond] - Optional pre-populated condition { field, operator, value }
  */
@@ -302,27 +347,26 @@ function addConditionRow(cond = {}) {
     <select class="form-select cond-field">
       <option value="name"      ${cond.field === 'name'      ? 'selected' : ''}>File Name</option>
       <option value="extension" ${cond.field === 'extension' ? 'selected' : ''}>Extension</option>
-      <option value="size"      ${cond.field === 'size'      ? 'selected' : ''}>File Size (bytes)</option>
-      <option value="age_days"  ${cond.field === 'age_days'  ? 'selected' : ''}>Age (days)</option>
+      <option value="size"      ${cond.field === 'size'      ? 'selected' : ''}>File Size</option>
+      <option value="age_days"  ${cond.field === 'age_days'  ? 'selected' : ''}>File Age</option>
     </select>
 
     <!-- Operator selector: how to compare -->
-    <select class="form-select cond-operator">
-      <option value="contains"    ${cond.operator === 'contains'    ? 'selected' : ''}>contains</option>
-      <option value="starts_with" ${cond.operator === 'starts_with' ? 'selected' : ''}>starts with</option>
-      <option value="ends_with"   ${cond.operator === 'ends_with'   ? 'selected' : ''}>ends with</option>
-      <option value="equals"      ${cond.operator === 'equals'      ? 'selected' : ''}>equals</option>
-      <option value="greater_than"${cond.operator === 'greater_than'? 'selected' : ''}>greater than</option>
-      <option value="less_than"   ${cond.operator === 'less_than'   ? 'selected' : ''}>less than</option>
-      <option value="regex"       ${cond.operator === 'regex'       ? 'selected' : ''}>regex</option>
-    </select>
+    <select class="form-select cond-operator"></select>
 
     <!-- Value input: what to compare against -->
-    <input type="text" class="form-input cond-value" placeholder="value..." value="${escapeHtml(String(cond.value || ''))}" />
+    <input type="text" class="form-input cond-value" placeholder="e.g. invoice" value="${escapeHtml(String(cond.value || ''))}" />
 
     <!-- Remove this condition row -->
     <button class="btn btn-danger btn-icon btn-sm btn-remove-cond" title="Remove condition">✕</button>
   `;
+
+  // Attach dynamic updates when field changes
+  const fieldSelect = row.querySelector('.cond-field');
+  fieldSelect.addEventListener('change', () => updateConditionRow(row));
+
+  // Initialize operators and placeholder
+  updateConditionRow(row, cond.operator);
 
   // Remove condition row on click
   row.querySelector('.btn-remove-cond').addEventListener('click', () => {
