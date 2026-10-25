@@ -54,17 +54,6 @@ function initPreviewUI() {
 
     renderSimulationTable(result.predictions, resultsContainer, folderPath);
   });
-
-  // Test Dormammu Loop Safeguard simulation button
-  document.getElementById('btnSimulateLoop')?.addEventListener('click', () => {
-    showToast('🌀 Simulating recursive rule loop across doorways...', 'info', 2000);
-    setTimeout(() => {
-      showToast('⚠ DORMAMMU LOOP HALTED: File "scroll.loop" trapped in temporal recursion (3 cycles)! Stopped automatically to protect timeline.', 'error', 9000);
-      if (typeof showDormammuAlert === 'function') {
-        showDormammuAlert('File "scroll.loop" trapped in temporal recursion (3 cycles)! Stopped automatically to protect timeline.');
-      }
-    }, 1000);
-  });
 }
 
 /**
