@@ -221,6 +221,7 @@ function registerIpcHandlers() {
   /** Executes sweep on ALL watched doorways */
   ipcMain.handle('sweep:executeAll', async () => {
     try {
+      engine.clearLoopHistory();
       const rules = loadRules();
       const doorways = sentinel.getDoorways();
       const allEntries = [];
@@ -329,6 +330,8 @@ app.whenReady().then(() => {
   // Start watching all previously saved doorways
   sentinel.initWatchers();
   engine.setSentinel(sentinel);
+  ledger.setSentinel(sentinel);
+  ledger.setEngine(engine);
 
   // Register all IPC communication handlers
   registerIpcHandlers();

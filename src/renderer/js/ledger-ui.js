@@ -75,13 +75,13 @@ function renderLedgerTable(entries) {
     <table class="ledger-table">
       <thead>
         <tr>
-          <th>TIME</th>
+          <th>TIMESTAMP (Time)</th>
           <th>ACTION</th>
-          <th>ORIGINAL FILE</th>
-          <th>NEW LOCATION</th>
-          <th>MATCHED RULE</th>
+          <th>RELIC (Original File)</th>
+          <th>DESTINATION (New Location)</th>
+          <th>ENCHANTMENT (Rule)</th>
           <th>STATUS</th>
-          <th>UNDO</th>
+          <th>REWIND (Undo)</th>
         </tr>
       </thead>
       <tbody>
@@ -110,13 +110,13 @@ function renderLedgerTable(entries) {
 
     // Status stamp
     const statusStamp = isRewound
-      ? '<span class="stamp stamp-rewound">REWOUND</span>'
-      : '<span class="stamp stamp-committed">COMMITTED</span>';
+      ? '<span class="stamp stamp-rewound">REWOUND (Undone)</span>'
+      : '<span class="stamp stamp-committed">COMMITTED (Active)</span>';
 
     // Rewind button (disabled if already rewound or if TRASH — can't auto-recover from OS trash)
     const canRewind = !isRewound && entry.actionType !== 'TRASH';
     const rewindBtn = canRewind
-      ? `<button class="btn btn-rewind btn-sm" data-entry-id="${entry.id}">↩ UNDO</button>`
+      ? `<button class="btn btn-rewind btn-sm" data-entry-id="${entry.id}">↩ REWIND (Undo)</button>`
       : `<span class="muted-text" style="font-size:10px;">${isRewound ? 'UNDONE' : 'N/A'}</span>`;
 
     html += `
@@ -175,10 +175,10 @@ async function rewindSingleEntry(entryId) {
  */
 function getActionStamp(actionType) {
   switch (actionType) {
-    case 'MOVE':   return '<span class="stamp stamp-move">MOVED (BRANCHED)</span>';
-    case 'COPY':   return '<span class="stamp stamp-copy">COPIED (REPLICATED)</span>';
-    case 'RENAME': return '<span class="stamp stamp-rename">RENAMED (TRANSMUTED)</span>';
-    case 'TRASH':  return '<span class="stamp stamp-trash">TRASHED (PRUNED)</span>';
+    case 'MOVE':   return '<span class="stamp stamp-move">BRANCHED (Moved)</span>';
+    case 'COPY':   return '<span class="stamp stamp-copy">REPLICATED (Copied)</span>';
+    case 'RENAME': return '<span class="stamp stamp-rename">TRANSMUTED (Renamed)</span>';
+    case 'TRASH':  return '<span class="stamp stamp-trash">PRUNED (Trashed)</span>';
     default:       return `<span class="stamp">${escapeHtml(actionType)}</span>`;
   }
 }

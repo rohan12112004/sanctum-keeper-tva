@@ -123,10 +123,10 @@ function renderSimulationTable(predictions, container, folderPath) {
       <thead>
         <tr>
           <th>#</th>
-          <th>FILE NAME</th>
-          <th>MATCHED RULE</th>
+          <th>RELIC (File Name)</th>
+          <th>ENCHANTMENT (Rule)</th>
           <th>ACTION</th>
-          <th>PREDICTED DESTINATION</th>
+          <th>PREDICTED FATE (Destination)</th>
         </tr>
       </thead>
       <tbody>

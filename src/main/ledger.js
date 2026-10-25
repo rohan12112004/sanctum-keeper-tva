@@ -34,6 +34,16 @@ class SacredLedger {
   constructor(userDataPath) {
     this.filePath = path.join(userDataPath, 'sacred_ledger.json');
     this.entries = this.load();
+    this.sentinel = null;
+    this.engine = null;
+  }
+
+  setSentinel(sentinel) {
+    this.sentinel = sentinel;
+  }
+
+  setEngine(engine) {
+    this.engine = engine;
   }
 
   // ── Persistence: Atomic Load & Save ───────────────────────────────
@@ -146,6 +156,15 @@ class SacredLedger {
       if (!fs.existsSync(sourceDir)) {
         fs.mkdirSync(sourceDir, { recursive: true });
       }
+
+      // Tell sentinel to ignore this restored file so it doesn't get automatically re-sorted!
+      if (this.sentinel) {
+        this.sentinel.ignoreNext(entry.source, 20000);
+      }
+      if (this.engine) {
+        this.engine.clearLoopHistory(path.basename(entry.source));
+      }
+
       await fs.promises.rename(entry.destination, entry.source);
 
     } else if (entry.actionType === 'COPY') {

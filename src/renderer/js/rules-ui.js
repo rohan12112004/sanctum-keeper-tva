@@ -83,10 +83,10 @@ function createRuleCard(rule, index) {
   // Build action badge
   const actionBadgeClass = `badge-${rule.action?.type || 'move'}`;
   const actionLabels = {
-    move: '⇒ MOVE (BRANCH)',
-    copy: '⊕ COPY (REPLICATE)',
-    rename: '✎ RENAME (TRANSMUTE)',
-    trash: '🗑 TRASH (PRUNE)'
+    move: '⇒ BRANCH (Move)',
+    copy: '⊕ REPLICATE (Copy)',
+    rename: '✎ TRANSMUTE (Rename)',
+    trash: '🗑 PRUNE TO VOID (Trash)'
   };
   const actionLabel = actionLabels[rule.action?.type] || rule.action?.type?.toUpperCase();
   const actionDest = rule.action?.destination

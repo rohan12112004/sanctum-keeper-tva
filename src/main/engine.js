@@ -84,36 +84,49 @@ class RuleEngine {
     this.sentinel = sentinel;
   }
 
+  /**
+   * Resets loop tracking history (called after manual sweeps and undos).
+   */
+  clearLoopHistory(fileBase = null) {
+    if (fileBase) {
+      this.recentMoves.delete(fileBase.toLowerCase());
+    } else {
+      this.recentMoves.clear();
+    }
+  }
+
   // ── A2: Dormammu Loop Detector ─────────────────────────────────────
 
   /**
    * Detects if a file is trapped in a recursive ping-pong loop between watched folders.
    */
   checkDormammuLoop(sourcePath, destPath = null) {
-    if (!sourcePath) return;
-    const now = Date.now();
-    const WINDOW_MS = 8000;
+    if (!sourcePath || !destPath) return;
+
+    const srcDir = path.dirname(path.resolve(sourcePath)).toLowerCase();
+    const destDir = path.dirname(path.resolve(destPath)).toLowerCase();
+
+    // If source and destination are the same directory, not a loop
+    if (srcDir === destDir) return;
 
     const fileBase = path.basename(sourcePath).toLowerCase();
-    const srcDir = path.dirname(path.resolve(sourcePath)).toLowerCase();
-    const destDir = destPath ? path.dirname(path.resolve(destPath)).toLowerCase() : null;
-
-    // Moving within the exact same folder with identical name is not a loop
-    if (destDir && srcDir === destDir && path.basename(destPath).toLowerCase() === fileBase) {
-      return;
-    }
+    const now = Date.now();
+    const WINDOW_MS = 6000;
 
     const history = (this.recentMoves.get(fileBase) || [])
       .filter(record => now - record.time < WINDOW_MS);
 
-    // True loop check: did this file bounce back and forth between two directories?
-    const isPingPong = destDir && history.some(r => r.srcDir === destDir && r.destDir === srcDir);
-
     history.push({ time: now, srcDir, destDir });
     this.recentMoves.set(fileBase, history);
 
-    // Only halt if genuine ping-pong loop or > 5 transitions in 8 seconds
-    if (isPingPong || history.length > 5) {
+    // Count rapid bounces specifically between these two folders
+    const bounceCount = history.filter(r =>
+      (r.srcDir === srcDir && r.destDir === destDir) ||
+      (r.srcDir === destDir && r.destDir === srcDir)
+    ).length;
+
+    // A true runaway loop requires 3+ rapid bounces in 6s
+    if (bounceCount >= 3 || history.length >= 6) {
       console.warn(`[Engine] ⚠ Dormammu cycle prevented for: "${fileBase}"`);
       throw new Error(
         `DORMAMMU LOOP DETECTED: File "${fileBase}" is cycling between folders! Stopped automatically to protect timeline.`
@@ -470,6 +483,8 @@ class RuleEngine {
    * @returns {Object[]} array of ledger entries created during this sweep
    */
   async executeSweep(folderPath, rules) {
+    // Reset loop tracking on manual sweeps
+    this.clearLoopHistory();
     let files;
     try {
       files = fs.readdirSync(folderPath, { withFileTypes: true })
