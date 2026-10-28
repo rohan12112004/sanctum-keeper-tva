@@ -761,3 +761,132 @@
   color: var(--text-muted);
   letter-spacing: 0.5px;
 }
+
+
+/* ── ANCIENT SCROLLS (Rule Templates) ─────────────────────────────── */
+
+/* Ancient Scrolls button — golden parchment style */
+.btn-scroll {
+  background: linear-gradient(180deg, #2A1F00, #1A1200);
+  border-color: var(--gold);
+  color: var(--gold);
+  box-shadow: 0 0 8px rgba(199,167,92,0.2), inset 0 1px 0 rgba(199,167,92,0.15);
+  text-shadow: 0 0 6px rgba(199,167,92,0.3);
+}
+.btn-scroll:hover {
+  background: linear-gradient(180deg, #3A2D00, #251A00);
+  box-shadow: 0 0 18px rgba(199,167,92,0.35), inset 0 1px 0 rgba(199,167,92,0.25);
+  color: var(--amber);
+  border-color: var(--amber);
+  transform: translateY(-1px);
+}
+.btn-scroll:active {
+  transform: translateY(1px);
+  box-shadow: 0 0 4px rgba(199,167,92,0.2), inset 0 2px 4px rgba(0,0,0,0.4);
+}
+
+/* Wider modal for scrolls picker */
+.modal-box-wide {
+  max-width: 720px;
+}
+
+/* Intro text in scrolls modal */
+.scrolls-intro {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  margin-bottom: 20px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* Grid layout for template cards */
+.scrolls-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+/* Individual template card */
+.scroll-card {
+  padding: 16px;
+  background: var(--tva-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.scroll-card:hover {
+  border-color: var(--amber);
+  box-shadow: 0 0 16px var(--amber-glow), inset 0 0 20px rgba(229,139,36,0.04);
+  transform: translateY(-2px);
+}
+
+.scroll-card:active {
+  transform: translateY(0);
+}
+
+/* Amber glow line on left edge */
+.scroll-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--gold-dim);
+  transition: background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.scroll-card:hover::before {
+  background: var(--amber);
+  box-shadow: 0 0 8px var(--amber-glow);
+}
+
+.scroll-card-icon {
+  font-size: 22px;
+  margin-bottom: 8px;
+}
+
+.scroll-card-name {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--amber);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.scroll-card-desc {
+  font-size: 11px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-bottom: 10px;
+}
+
+/* Tags showing what the template does */
+.scroll-card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.scroll-tag {
+  display: inline-block;
+  padding: 2px 7px;
+  font-size: 9px;
+  letter-spacing: 1px;
+  border-radius: 2px;
+  border: 1px solid var(--border);
+  color: var(--gold);
+  background: rgba(199,167,92,0.06);
+}
+
+.scroll-tag-action {
+  border-color: var(--emerald-dim);
+  color: var(--emerald);
+  background: rgba(0,255,157,0.06);
+}

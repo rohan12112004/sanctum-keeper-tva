@@ -1,4 +1,4 @@
-/**
+﻿/**
  * ╔══════════════════════════════════════════════════════════════════╗
  * ║          SANCTUM KEEPER — TVA EDITION                           ║
  * ║          rules-ui.js — Visual Enchantment Builder (B2 + B3)     ║
@@ -23,6 +23,119 @@ let rules = [];
 // Index of rule currently being edited (-1 = new rule)
 let editingRuleIndex = -1;
 
+// ── Ancient Scrolls: Pre-built Rule Templates ────────────────────────
+// Each scroll is a ready-made enchantment from the Citadel at the End of Time.
+// Users pick one, it pre-fills the rule editor modal for customization.
+
+const ANCIENT_SCROLLS = [
+  {
+    icon: '📄',
+    name: 'Document Sorter',
+    description: 'Sort documents (PDF, DOCX, XLSX, PPTX, TXT) into a dedicated folder.',
+    logic: 'ANY',
+    conditions: [
+      { field: 'extension', operator: 'equals', value: 'pdf' },
+      { field: 'extension', operator: 'equals', value: 'docx' },
+      { field: 'extension', operator: 'equals', value: 'xlsx' },
+      { field: 'extension', operator: 'equals', value: 'pptx' },
+      { field: 'extension', operator: 'equals', value: 'txt' }
+    ],
+    action: { type: 'move', destination: '' },
+    tags: ['ext: pdf, docx, xlsx...', 'BRANCH (Move)']
+  },
+  {
+    icon: '🖼',
+    name: 'Image Organizer',
+    description: 'Collect images (PNG, JPG, JPEG, GIF, SVG, WEBP) into one place.',
+    logic: 'ANY',
+    conditions: [
+      { field: 'extension', operator: 'equals', value: 'png' },
+      { field: 'extension', operator: 'equals', value: 'jpg' },
+      { field: 'extension', operator: 'equals', value: 'jpeg' },
+      { field: 'extension', operator: 'equals', value: 'gif' },
+      { field: 'extension', operator: 'equals', value: 'svg' },
+      { field: 'extension', operator: 'equals', value: 'webp' }
+    ],
+    action: { type: 'move', destination: '' },
+    tags: ['ext: png, jpg, gif...', 'BRANCH (Move)']
+  },
+  {
+    icon: '🎬',
+    name: 'Media Handler',
+    description: 'Route audio and video files (MP4, MKV, AVI, MP3, WAV) to a media folder.',
+    logic: 'ANY',
+    conditions: [
+      { field: 'extension', operator: 'equals', value: 'mp4' },
+      { field: 'extension', operator: 'equals', value: 'mkv' },
+      { field: 'extension', operator: 'equals', value: 'avi' },
+      { field: 'extension', operator: 'equals', value: 'mp3' },
+      { field: 'extension', operator: 'equals', value: 'wav' }
+    ],
+    action: { type: 'move', destination: '' },
+    tags: ['ext: mp4, mkv, mp3...', 'BRANCH (Move)']
+  },
+  {
+    icon: '📦',
+    name: 'Archive Handler',
+    description: 'Gather compressed archives (ZIP, RAR, 7Z, TAR, GZ) into one folder.',
+    logic: 'ANY',
+    conditions: [
+      { field: 'extension', operator: 'equals', value: 'zip' },
+      { field: 'extension', operator: 'equals', value: 'rar' },
+      { field: 'extension', operator: 'equals', value: '7z' },
+      { field: 'extension', operator: 'equals', value: 'tar' },
+      { field: 'extension', operator: 'equals', value: 'gz' }
+    ],
+    action: { type: 'move', destination: '' },
+    tags: ['ext: zip, rar, 7z...', 'BRANCH (Move)']
+  },
+  {
+    icon: '🗑',
+    name: 'Old File Cleaner',
+    description: 'Prune files older than 30 days to the Void (Recycle Bin).',
+    logic: 'ALL',
+    conditions: [
+      { field: 'age_days', operator: 'greater_than', value: '30' }
+    ],
+    action: { type: 'trash' },
+    tags: ['age > 30 days', 'PRUNE TO VOID']
+  },
+  {
+    icon: '📝',
+    name: 'Invoice Sorter',
+    description: 'Move PDF files with "invoice" in the name to an invoices folder.',
+    logic: 'ALL',
+    conditions: [
+      { field: 'name', operator: 'contains', value: 'invoice' },
+      { field: 'extension', operator: 'equals', value: 'pdf' }
+    ],
+    action: { type: 'move', destination: '' },
+    tags: ['name: invoice + ext: pdf', 'BRANCH (Move)']
+  },
+  {
+    icon: '🐘',
+    name: 'Large File Spotter',
+    description: 'Detect files larger than 100MB and move them to a dedicated folder.',
+    logic: 'ALL',
+    conditions: [
+      { field: 'size', operator: 'greater_than', value: '100MB' }
+    ],
+    action: { type: 'move', destination: '' },
+    tags: ['size > 100MB', 'BRANCH (Move)']
+  },
+  {
+    icon: '✎',
+    name: 'Date Stamp Renamer',
+    description: "Prefix all files with today's date for chronological ordering.",
+    logic: 'ALL',
+    conditions: [
+      { field: 'name', operator: 'regex', value: '.*' }
+    ],
+    action: { type: 'rename', pattern: '{date}_{originalName}' },
+    tags: ['all files', 'TRANSMUTE (Rename)']
+  }
+];
+
 /**
  * Initializes the rules UI — loads rules, renders list, attaches modal handlers.
  */
@@ -31,6 +144,7 @@ async function initRulesUI() {
   renderRulesList();
   initRuleModal();
   document.getElementById('btnAddRule')?.addEventListener('click', openNewRuleModal);
+  initScrollsModal();
 }
 
 // ── Rules List Rendering ──────────────────────────────────────────────
@@ -492,4 +606,99 @@ function escapeHtml(str) {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
+}
+
+// ── Ancient Scrolls Modal & Template Loader ──────────────────────────
+
+/**
+ * Attaches event listeners for the Ancient Scrolls template modal.
+ */
+function initScrollsModal() {
+  const btnScrolls = document.getElementById('btnAncientScrolls');
+  const modal = document.getElementById('scrollsModal');
+  const btnClose = document.getElementById('btnCloseScrollsModal');
+
+  btnScrolls?.addEventListener('click', openScrollsModal);
+  btnClose?.addEventListener('click', closeScrollsModal);
+
+  modal?.addEventListener('click', (e) => {
+    if (e.target === modal) closeScrollsModal();
+  });
+}
+
+/**
+ * Opens the Ancient Scrolls template modal and populates the cards.
+ */
+function openScrollsModal() {
+  renderScrollsGrid();
+  const modal = document.getElementById('scrollsModal');
+  if (modal) modal.hidden = false;
+}
+
+/**
+ * Closes the Ancient Scrolls modal.
+ */
+function closeScrollsModal() {
+  const modal = document.getElementById('scrollsModal');
+  if (modal) modal.hidden = true;
+}
+
+/**
+ * Renders the preset template cards into the scrolls grid.
+ */
+function renderScrollsGrid() {
+  const grid = document.getElementById('scrollsGrid');
+  if (!grid) return;
+  grid.innerHTML = '';
+
+  ANCIENT_SCROLLS.forEach(scroll => {
+    const card = document.createElement('div');
+    card.className = 'scroll-card';
+
+    const tagsHtml = (scroll.tags || []).map((tag, idx) => {
+      const isAction = idx === scroll.tags.length - 1;
+      return '<span class="scroll-tag ' + (isAction ? 'scroll-tag-action' : '') + '">' + escapeHtml(tag) + '</span>';
+    }).join(' ');
+
+    card.innerHTML = 
+      '<div class="scroll-card-icon">' + scroll.icon + '</div>' +
+      '<div class="scroll-card-name">' + escapeHtml(scroll.name) + '</div>' +
+      '<div class="scroll-card-desc">' + escapeHtml(scroll.description) + '</div>' +
+      '<div class="scroll-card-tags">' + tagsHtml + '</div>';
+
+    card.addEventListener('click', () => {
+      closeScrollsModal();
+      loadTemplateIntoModal(scroll);
+    });
+
+    grid.appendChild(card);
+  });
+}
+
+/**
+ * Unfurls an Ancient Scroll into the Rule Editor modal for user customization.
+ * @param {Object} scroll - Template definition from ANCIENT_SCROLLS
+ */
+function loadTemplateIntoModal(scroll) {
+  editingRuleIndex = -1;
+  document.getElementById('ruleModalTitle').textContent = 'INSCRIBE ENCHANTMENT (' + scroll.name + ')';
+  resetModal();
+
+  document.getElementById('ruleName').value = scroll.name;
+  document.getElementById('ruleLogic').value = scroll.logic || 'ALL';
+  document.getElementById('actionType').value = scroll.action?.type || 'move';
+
+  if (scroll.action?.destination) {
+    document.getElementById('actionDestination').value = scroll.action.destination;
+  }
+  if (scroll.action?.pattern) {
+    document.getElementById('actionPattern').value = scroll.action.pattern;
+  }
+
+  // Populate template conditions
+  (scroll.conditions || []).forEach(cond => addConditionRow(cond));
+
+  updateActionFields();
+  document.getElementById('ruleModal').hidden = false;
+  showToast('✦ Ancient scroll "' + scroll.name + '" opened in Rule Editor.', 'info');
 }
