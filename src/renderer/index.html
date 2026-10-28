@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <!--
   ╔══════════════════════════════════════════════════════════════════╗
   ║          SANCTUM KEEPER — TVA EDITION                           ║
@@ -129,6 +129,7 @@
       <!-- Add new rule button -->
       <div class="rules-toolbar">
         <button class="btn btn-primary" id="btnAddRule">+ INSCRIBE ENCHANTMENT (New Rule)</button>
+        <button class="btn btn-scroll" id="btnAncientScrolls">📜 ANCIENT SCROLLS (Templates)</button>
         <span class="rule-info amber-text">First Spell Wins ↓ (Rules execute from top to bottom)</span>
       </div>
 
@@ -204,6 +205,22 @@
           <div class="modal-footer">
             <button class="btn btn-ghost" id="btnCancelRule">CANCEL</button>
             <button class="btn btn-primary" id="btnSaveRule">ENGRAVE ENCHANTMENT (Save Rule)</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ancient Scrolls Template Picker Modal (hidden by default) -->
+      <div class="modal-overlay" id="scrollsModal" hidden>
+        <div class="modal-box modal-box-wide">
+          <div class="modal-header">
+            <h3 class="modal-title">ANCIENT SCROLLS — CITADEL ARCHIVES</h3>
+            <button class="modal-close" id="btnCloseScrollsModal">&#x2715;</button>
+          </div>
+          <div class="modal-body">
+            <p class="scrolls-intro">Select a pre-written enchantment from the Citadel at the End of Time. The scroll will open in the Rule Editor so you can customize it before engraving.</p>
+            <div class="scrolls-grid" id="scrollsGrid">
+              <!-- Template cards are rendered dynamically by rules-ui.js -->
+            </div>
           </div>
         </div>
       </div>
